@@ -38,9 +38,11 @@ trait File extends ExistingResource with FileResource {
 
   def moveTo(directory: Directory)
 
-  def contentToString(encoding: Charset): String
+  def readString(encoding: Charset): String
 
-  def contentToLines(encoding: Charset): Seq[String]
+  def readLines(encoding: Charset): Seq[String]
+
+  def readBytes(): Array[Byte]
 }
 
 /** Factory object for [[org.kaikikm.scala.clever.io.resources.existing.File]]*/
@@ -92,11 +94,13 @@ object File {
 
     override def moveTo(directory: Directory): Unit = directory.moveInside(this)
 
-    override def contentToString(encoding: Charset): String = FileUtils.readFileToString(this.rawFile, encoding)
+    override def readString(encoding: Charset): String = FileUtils.readFileToString(this, encoding)
 
-    override def contentToLines(encoding: Charset): Seq[String] =
-      scala.collection.JavaConverters.asScalaBuffer(FileUtils.readLines(this.rawFile, encoding))
+    override def readLines(encoding: Charset): Seq[String] =
+      scala.collection.JavaConverters.asScalaBuffer(FileUtils.readLines(this, encoding))
 
     override def writeLines(content: Seq[String], encoding: Charset): Unit = write(content.mkString("\r\n"), encoding)
+
+    override def readBytes(): Array[Byte] = FileUtils.readFileToByteArray(this)
   }
 }
