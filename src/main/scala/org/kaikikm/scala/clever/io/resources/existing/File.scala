@@ -2,7 +2,7 @@ package org.kaikikm.scala.clever.io.resources.existing
 
 import java.io.InputStream
 import java.net.URL
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 
 import org.apache.commons.io.FileUtils
 import org.kaikikm.scala.clever.io.resources.FileResource
@@ -18,21 +18,27 @@ trait File extends ExistingResource with FileResource {
   /**
     * @return File's input stream
     */
-  def openInputStream: InputStream
+  def openInputStream(): InputStream
 
   /** The method writes text to file. Old content of file is overwritten
     *
     * @param content Text to write
     */
-  def write(content: String)
+  def write(content: String, encoding: Charset)
+
+  def writeLines(content: Seq[String], encoding: Charset)
 
   /** The method appends text to file
     *
     * @param content Text to write
     */
-  def append(content: String)
+  def append(content: String, encoding: Charset)
 
   def copyTo(directory: Directory)
+
+  def contentToString(encoding: Charset): String
+
+  def contentToLines(encoding: Charset): Seq[String]
 }
 
 /** Factory object for [[org.kaikikm.scala.clever.io.resources.existing.File]]*/
@@ -70,18 +76,25 @@ object File {
     override val name: String = javaFile.getName
     require(javaFile.isFile)
 
-    override def openInputStream: InputStream = FileUtils.openInputStream(javaFile)
+    override def openInputStream(): InputStream = FileUtils.openInputStream(javaFile)
 
-    override def write(content: String): Unit = {
-      FileUtils.writeStringToFile(this, content, StandardCharsets.UTF_8, false)
+    override def write(content: String, encoding: Charset): Unit = {
+      FileUtils.writeStringToFile(this, content, encoding, false)
     }
 
-    override def append(content: String): Unit = {
-      FileUtils.writeStringToFile(this, content, StandardCharsets.UTF_8, true)
+    override def append(content: String, encoding: Charset): Unit = {
+      FileUtils.writeStringToFile(this, content, encoding, true)
     }
 
     override def copyTo(directory: Directory): Unit = {
       directory.copyInside(this)
     }
+
+    override def contentToString(encoding: Charset): String = FileUtils.readFileToString(this.rawFile, encoding)
+
+    override def contentToLines(encoding: Charset): Seq[String] =
+      scala.collection.JavaConverters.asScalaBuffer(FileUtils.readLines(this.rawFile, encoding))
+
+    override def writeLines(content: Seq[String], encoding: Charset): Unit = write(content.mkString("\r\n"), encoding)
   }
 }
