@@ -33,6 +33,8 @@ trait Directory extends ExistingResource with DirectoryResource {
   def existingChild(relativePath: String): Option[ExistingResource]
 
   def copyInside(file: File) //TODO for generic existing resource
+
+  def moveInside(file: File)
 }
 
 /** Factory object for [[org.kaikikm.scala.clever.io.resources.existing.Directory]]*/
@@ -95,6 +97,9 @@ object Directory {
     override def directorys(): Seq[Directory] = {
       javaFile.listFiles().filter(_.isDirectory).map(Directory(_)).toSeq
     }
+
+    override def moveInside(file: File): Unit =
+      FileUtils.moveDirectoryToDirectory(file, this.rawFile, false)
   }
 }
 

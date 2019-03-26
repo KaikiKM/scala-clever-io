@@ -36,6 +36,8 @@ trait File extends ExistingResource with FileResource {
 
   def copyTo(directory: Directory)
 
+  def moveTo(directory: Directory)
+
   def contentToString(encoding: Charset): String
 
   def contentToLines(encoding: Charset): Seq[String]
@@ -86,9 +88,9 @@ object File {
       FileUtils.writeStringToFile(this, content, encoding, true)
     }
 
-    override def copyTo(directory: Directory): Unit = {
-      directory.copyInside(this)
-    }
+    override def copyTo(directory: Directory): Unit = directory.copyInside(this)
+
+    override def moveTo(directory: Directory): Unit = directory.moveInside(this)
 
     override def contentToString(encoding: Charset): String = FileUtils.readFileToString(this.rawFile, encoding)
 
