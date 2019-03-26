@@ -23,7 +23,7 @@ trait Directory extends ExistingResource with DirectoryResource {
     */
   def filesAsStream(fileFormats: FileFormat*): Seq[InputStream]
 
-  def directorys(): Seq[Directory]
+  def directories(): Seq[Directory]
 
   /** Obtain child resource with relative path starting from this directory as input
     *
@@ -34,7 +34,10 @@ trait Directory extends ExistingResource with DirectoryResource {
 
   def copyInside(file: File) //TODO for generic existing resource
 
+  def copyInside(file: File, subDir: String)
+
   def moveInside(file: File)
+  def moveInside(file: File, subDir: String)
 }
 
 /** Factory object for [[org.kaikikm.scala.clever.io.resources.existing.Directory]]*/
@@ -90,16 +93,29 @@ object Directory {
     override def child(relativePath: String): IOResource =
       IOResource(FilenameUtils.concat(javaFile.getAbsolutePath, relativePath))
 
+
+    override def directories(): Seq[Directory] = {
+      javaFile.listFiles().filter(_.isDirectory).map(Directory(_)).toSeq
+    }
+
     override def copyInside(file: File): Unit = {
       FileUtils.copyFileToDirectory(file.rawFile, this.rawFile)
     }
 
-    override def directorys(): Seq[Directory] = {
-      javaFile.listFiles().filter(_.isDirectory).map(Directory(_)).toSeq
+    override def moveInside(file: File): Unit =
+      FileUtils.moveFileToDirectory(file, this.rawFile, false)
+
+    override def copyInside(file: File, subDir: String): Unit = {
+      val target = new java.io.File(FilenameUtils.concat(javaFile.getAbsolutePath, subDir))
+      target.mkdirs()
+      FileUtils.copyFileToDirectory(file.rawFile, target)
     }
 
-    override def moveInside(file: File): Unit =
-      FileUtils.moveDirectoryToDirectory(file, this.rawFile, false)
+    override def moveInside(file: File, subDir: String): Unit = {
+      val target = new java.io.File(FilenameUtils.concat(javaFile.getAbsolutePath, subDir))
+      target.mkdirs()
+      FileUtils.moveFileToDirectory(file.rawFile, target, false)
+    }
   }
 }
 
